@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN  
+  USER 
+
+  @@map("roles")
+}
+enum UserStatus {
+  DISABLED
+  ENABLED
+
+  @@map("user_status")
+}
+
+
+model User {
+  id                    String     @id @default(uuid())
+  firstName             String     @map("first_name")
+  lastName              String     @map("last_name")
+  email                 String     @unique
+  password              String
+  role                  Role       @default(USER)
+  status                UserStatus @default(DISABLED)
+  vehiclePlateNumber    String?    @map("vehicle_plate_number")
+  createdAt             DateTime   @default(now()) @map("created_at")
+  updatedAt             DateTime   @updatedAt @map("updated_at")
+  bookings              Booking[]
+
+  @@map("users")
+}
+
+model ParkingSpot {
+  id           String    @id @default(uuid())
+  spotNumber   String    @unique @map("spot_number")
+  isOccupied   Boolean   @default(false) @map("is_occupied")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  bookings     Booking[]
+
+  @@map("parking_spots")
+}
+
+model Booking {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  spotId      String    @map("spot_id")
+  bookedAt    DateTime  @default(now()) @map("booked_at")
+  releasedAt  DateTime? @map("released_at")
+
+  user User @relation(fields: [userId], references: [id])
+  spot ParkingSpot @relation(fields: [spotId], references: [id])
+
+  @@map("bookings")
+}
+
+model OTP {
+  id         String   @id @default(uuid())
+  email      String
+  code       String
+  createdAt  DateTime @default(now()) @map("created_at")
+  expiresAt  DateTime @map("expires_at")  
+  type       OtpType  @default(ACTIVATION)
+  @@map("otps")
+}
+
+enum OtpType {
+  ACTIVATION
+  RESET
+  @@map("otp_types")
+}
