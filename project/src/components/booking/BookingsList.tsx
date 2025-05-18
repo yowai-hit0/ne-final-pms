@@ -18,7 +18,7 @@ interface BookingsListProps {
   onFilterChange: (filter: 'ALL' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED') => void;
 }
 
-const BookingsList: React.FC<BookingsListProps> = ({
+export const BookingsList: React.FC<BookingsListProps> = ({
   bookings,
   isLoading,
   error,
@@ -246,5 +246,3 @@ const BookingsList: React.FC<BookingsListProps> = ({
     </div>
   );
 };
-
-export default BookingsList;
