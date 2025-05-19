@@ -53,36 +53,6 @@
         }
       }
     },
-    "/auth/activate": {
-      "post": {
-        "tags": [
-          "Auth"
-        ],
-        "description": "Authentication endpoints (register, login, OTP, etc.)",
-        "responses": {
-          "default": {
-            "description": ""
-          }
-        },
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "email": {
-                    "example": "any"
-                  },
-                  "code": {
-                    "example": "any"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/auth/login": {
       "post": {
         "tags": [
@@ -180,7 +150,7 @@
         }
       }
     },
-    "/auth/verify-otp": {
+    "/auth/activate": {
       "post": {
         "tags": [
           "Auth"
@@ -220,6 +190,20 @@
           "default": {
             "description": ""
           }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "example": "any"
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -252,6 +236,28 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/auth/profile": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "description": "Authentication endpoints (register, login, OTP, etc.)",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
           }
         }
       }

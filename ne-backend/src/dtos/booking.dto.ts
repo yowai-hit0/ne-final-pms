@@ -23,12 +23,11 @@ export class ListBookingsDTO {
   @IsOptional()
   @IsInt()
   @Min(1)
-  page?: number;
+  page?: string;
 
   @IsOptional()
-  @IsInt()
   @Min(1)
-  limit?: number;
+  limit?: string;
 
   // allows UI to sort ongoing vs completed
   @IsOptional()

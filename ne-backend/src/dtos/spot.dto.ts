@@ -17,19 +17,14 @@ export class GenerateSpotsDTO {
   @IsNotEmpty()
   prefix!: string;    // e.g. "A"
 
-  @IsInt()
-  @Min(1)
-  count!: number;     // how many to generate
+  @IsNotEmpty()
+  count!: string;     // how many to generate
 }
 
 export class ListSpotsDTO {
   @IsOptional()
-  @IsInt()
-  @Min(1)
-  page?: number;
+  page?: string;
 
   @IsOptional()
-  @IsInt()
-  @Min(1)
-  limit?: number;
+  limit?: string;
 }

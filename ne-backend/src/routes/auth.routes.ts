@@ -8,6 +8,7 @@ import {
   requestOtp,
   verifyOtp,
   forgotPassword,
+  getProfile,
   resetPassword,
 } from "../controllers/auth.controller";
 import { validateRequest } from "../middlewares/validate.middleware";
@@ -23,7 +24,6 @@ import { verifyAuth } from "../middlewares/auth.middleware";
 const router = Router();
 
 router.post("/register", validateRequest(RegisterDTO), register);
-router.post("/activate", validateRequest(EmailDTO), activate);
 router.post("/login", validateRequest(LoginDTO), login);
 router.post("/refresh-token", refreshToken);
 router.post(
@@ -35,12 +35,13 @@ router.post(
 
 // Password-reset flows
 router.post("/request-otp", validateRequest(EmailDTO), requestOtp);
-router.post("/verify-otp", validateRequest(VerifyOtpDTO), verifyOtp);
+router.post("/activate", validateRequest(VerifyOtpDTO), activate);
 router.post("/forgot-password", validateRequest(EmailDTO), forgotPassword);
 router.post(
   "/reset-password",
   validateRequest(ResetPasswordDTO),
   resetPassword
 );
+router.get('/profile', verifyAuth, getProfile)
 
 export default router;

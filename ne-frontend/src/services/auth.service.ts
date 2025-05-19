@@ -9,13 +9,14 @@ export const AuthService = {
   
   async login(credentials: LoginCredentials): Promise<{ token: string; user: User }> {
     const response = await api.post('/auth/login', credentials);
-    localStorage.setItem('token', response.data.token);
+    console.log(response.data);
+    localStorage.setItem('token', response.data.accessToken);
     localStorage.setItem('user', JSON.stringify(response.data.user));
     return response.data;
   },
   
   async verifyEmail(data: VerificationData): Promise<{ message: string }> {
-    const response = await api.post('/auth/verify', data);
+    const response = await api.post('/auth/activate', data);
     return response.data;
   },
   
@@ -26,7 +27,7 @@ export const AuthService = {
   
   async getProfile(): Promise<User> {
     const response = await api.get('/auth/profile');
-    return response.data;
+    return response.data.user;
   },
   
   async logout(): Promise<void> {
