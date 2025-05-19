@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, CheckSquare, Clock, Car } from 'lucide-react';
+import { Calendar, CheckSquare, Clock, Car, LogOut } from 'lucide-react';
 import { Booking } from '../../types';
 import { Card, CardBody } from '../ui/Card';
 import Button from '../ui/Button';
@@ -14,8 +14,8 @@ interface BookingsListProps {
   totalPages: number;
   onPageChange: (page: number) => void;
   onReleaseBooking: (bookingId: string) => Promise<void>;
-  activeFilter: 'ALL' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
-  onFilterChange: (filter: 'ALL' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED') => void;
+  activeFilter: 'ALL' | 'ongoing' | 'completed';
+  onFilterChange: (filter: 'ALL' | 'ongoing' | 'completed' ) => void;
 }
 
 export const BookingsList: React.FC<BookingsListProps> = ({
@@ -31,10 +31,17 @@ export const BookingsList: React.FC<BookingsListProps> = ({
 }) => {
   const [actionInProgress, setActionInProgress] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [showConfirmRelease, setShowConfirmRelease] = useState<string | null>(null);
   
   const handleReleaseBooking = async (bookingId: string) => {
+    if (showConfirmRelease !== bookingId) {
+      setShowConfirmRelease(bookingId);
+      return;
+    }
+
     setActionInProgress(bookingId);
     setActionError(null);
+    setShowConfirmRelease(null);
     
     try {
       await onReleaseBooking(bookingId);
@@ -44,14 +51,18 @@ export const BookingsList: React.FC<BookingsListProps> = ({
       setActionInProgress(null);
     }
   };
+
+  const cancelRelease = () => {
+    setShowConfirmRelease(null);
+  };
   
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
-      case 'ACTIVE':
+      case 'ongoing':
         return 'bg-green-100 text-green-800';
-      case 'COMPLETED':
+      case 'completed':
         return 'bg-blue-100 text-blue-800';
-      case 'CANCELLED':
+      case 'cancelled':
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -69,7 +80,6 @@ export const BookingsList: React.FC<BookingsListProps> = ({
     const end = new Date(endTime).getTime();
     const diffMs = end - start;
     
-    // Convert to hours and minutes
     const hours = Math.floor(diffMs / (1000 * 60 * 60));
     const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
     
@@ -124,9 +134,9 @@ export const BookingsList: React.FC<BookingsListProps> = ({
           All
         </button>
         <button
-          onClick={() => onFilterChange('ACTIVE')}
+          onClick={() => onFilterChange('ongoing')}
           className={`px-4 py-2 text-sm font-medium ${
-            activeFilter === 'ACTIVE'
+            activeFilter === 'ongoing'
               ? 'text-blue-600 border-b-2 border-blue-500'
               : 'text-gray-500 hover:text-gray-700'
           }`}
@@ -134,24 +144,14 @@ export const BookingsList: React.FC<BookingsListProps> = ({
           Active
         </button>
         <button
-          onClick={() => onFilterChange('COMPLETED')}
+          onClick={() => onFilterChange('completed')}
           className={`px-4 py-2 text-sm font-medium ${
-            activeFilter === 'COMPLETED'
+            activeFilter === 'completed'
               ? 'text-blue-600 border-b-2 border-blue-500'
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
           Completed
-        </button>
-        <button
-          onClick={() => onFilterChange('CANCELLED')}
-          className={`px-4 py-2 text-sm font-medium ${
-            activeFilter === 'CANCELLED'
-              ? 'text-blue-600 border-b-2 border-blue-500'
-              : 'text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          Cancelled
         </button>
       </div>
       
@@ -190,26 +190,28 @@ export const BookingsList: React.FC<BookingsListProps> = ({
                           </span>
                         </div>
                         
-                        <div className="mt-1 flex flex-col sm:flex-row sm:flex-wrap text-sm text-gray-500">
+                        <div className="mt-1 text-sm text-gray-500">
+                          <p>Vehicle: {booking.user.vehicle_plate_number}</p>
+                          <p>Driver: {booking.user.name}</p>
+                        </div>
+                        
+                        <div className="mt-2 flex flex-col sm:flex-row sm:flex-wrap text-sm text-gray-500">
                           <div className="flex items-center mt-1 sm:mt-0 mr-4">
                             <Calendar className="h-4 w-4 mr-1" />
-                            <span>Started: {formatTimestamp(booking.startTime)}</span>
+                            <span>Entry: {formatTimestamp(booking.entry_time)}</span>
                           </div>
                           
-                          {booking.endTime && (
+                          {booking.exit_time && (
                             <div className="flex items-center mt-1 sm:mt-0 mr-4">
                               <CheckSquare className="h-4 w-4 mr-1" />
-                              <span>Ended: {formatTimestamp(booking.endTime)}</span>
+                              <span>Exit: {formatTimestamp(booking.exit_time)}</span>
                             </div>
                           )}
                           
                           <div className="flex items-center mt-1 sm:mt-0">
                             <Clock className="h-4 w-4 mr-1" />
                             <span>
-                              Duration: {booking.endTime 
-                                ? calculateDuration(booking.startTime, booking.endTime)
-                                : 'Ongoing'
-                              }
+                              Duration: {calculateDuration(booking.entry_time, booking.exit_time)}
                             </span>
                           </div>
                         </div>
@@ -218,16 +220,38 @@ export const BookingsList: React.FC<BookingsListProps> = ({
                   </div>
                   
                   <div className="mt-4 md:mt-0 md:ml-4">
-                    {booking.status === 'ACTIVE' && (
-                      <Button
-                        variant="warning"
-                        size="sm"
-                        onClick={() => handleReleaseBooking(booking.id)}
-                        isLoading={actionInProgress === booking.id}
-                        disabled={actionInProgress === booking.id}
-                      >
-                        Release Spot
-                      </Button>
+                    {booking.status === 'ongoing' && (
+                      <div className="flex space-x-2">
+                        {showConfirmRelease === booking.id ? (
+                          <>
+                            <Button
+                              variant="danger"
+                              size="sm"
+                              onClick={() => handleReleaseBooking(booking.id)}
+                              isLoading={actionInProgress === booking.id}
+                              disabled={actionInProgress === booking.id}
+                            >
+                              Confirm Release
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={cancelRelease}
+                            >
+                              Cancel
+                            </Button>
+                          </>
+                        ) : (
+                          <Button
+                            variant="warning"
+                            size="sm"
+                            onClick={() => handleReleaseBooking(booking.id)}
+                            leftIcon={<LogOut className="h-4 w-4" />}
+                          >
+                            Release Spot
+                          </Button>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -246,3 +270,5 @@ export const BookingsList: React.FC<BookingsListProps> = ({
     </div>
   );
 };
+
+export default BookingsList;

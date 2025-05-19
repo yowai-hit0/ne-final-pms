@@ -25,55 +25,51 @@ export interface ParkingSpot {
   updatedAt: string;
 }
 
-export interface Booking {
-  id: string;
-  userId: string;
-  spotId: string;
-  spot: ParkingSpot;
-  startTime: string;
-  endTime: string | null;
-  status: 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
-  createdAt: string;
-  updatedAt: string;
+export interface ApiResponse<T> {
+  status: string;
+  message: string;
+  data: T;
 }
 
-export interface PaginatedResponse<T> {
-  data: T[];
+export interface BookingUser {
+  user_id: string;
+  email: string;
+  name: string;
+  vehicle_plate_number: string;
+}
+
+export interface BookingSpot {
+  id: string;
+  spotNumber: string;
+}
+
+export interface Booking {
+  id: string;
+  user: BookingUser;
+  spot: BookingSpot;
+  entry_time: string;
+  exit_time: string | null;
+  status: 'ongoing' | 'completed' | 'cancelled';
+}
+
+export interface BookingResponse {
+  booking_response: Booking[];
   meta: {
-    currentPage: number;
-    totalPages: number;
-    totalItems: number;
-    itemsPerPage: number;
+    page: number;
+    limit: number;
+    total: number;
+    lastPage: number;
   };
 }
 
-export interface LoginCredentials {
-  email: string;
-  password: string;
-}
-
-export interface RegisterData {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  vehiclePlateNumber: string;
-}
-
-export interface VerificationData {
-  email: string;
-  code: string;
-}
-
-export interface ApiError {
-  message: string;
-  status: number;
-}
-
 export interface BookingFilters {
-  status?: 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
+  status?: string;
   page?: number;
   limit?: number;
+  startDate?: string;
+  endDate?: string;
+  customerName?: string;
+  bookingId?: string;
 }
 
 export interface SpotFilters {

@@ -29,9 +29,8 @@ export function validateRequest(
       ServerResponse.error(res, messages, null, 400);
       return;
     }
-
     // Replace with validated instance
-    (req as any)[property] = instance;
+    Object.assign(req[property], instance);
     next();
   };
 }

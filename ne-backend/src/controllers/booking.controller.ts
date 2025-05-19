@@ -25,7 +25,6 @@ export const createBooking: RequestHandler = async (req, res) => {
     where: { id: spotId },
     data: { isOccupied: true }
   });
-
   return ServerResponse.created(res, 'Booking created', booking);
 };
 
@@ -76,7 +75,7 @@ export const listBookings: RequestHandler = async (req, res) => {
       orderBy: { bookedAt: 'desc' }
     })
   ]);
-
+  const booking_response = bookings.map((booking) => ({ id: booking.id, user:{user_id:booking.user.id, email:booking.user.email, name: booking.user.firstName, vehicle_plate_number: booking.user.vehiclePlateNumber }, spot: { id: booking.spot.id, spotNumber: booking.spot.spotNumber } , entry_time: booking.bookedAt, exit_time: booking.releasedAt, status: booking.releasedAt ? 'complete' : 'ongoing'  } ));
   const meta = paginator({ page: Number(page), limit: Number(limit), total });
-  return ServerResponse.success(res, 'Bookings fetched', { bookings, meta });
+  return ServerResponse.success(res, 'Bookings fetched', { booking_response, meta });
 };

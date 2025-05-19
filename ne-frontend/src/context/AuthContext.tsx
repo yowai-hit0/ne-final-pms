@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useReducer } from 'react';
-import { AuthService } from '../services/auth.service';
+import  AuthService  from '../services/auth.service';
 import { AuthState, LoginCredentials, RegisterData, User, VerificationData } from '../types';
 
 // Define the AuthContext state and functions

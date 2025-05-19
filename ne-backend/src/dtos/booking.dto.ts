@@ -21,12 +21,9 @@ export class ReleaseBookingDTO {
 
 export class ListBookingsDTO {
   @IsOptional()
-  @IsInt()
-  @Min(1)
   page?: string;
 
   @IsOptional()
-  @Min(1)
   limit?: string;
 
   // allows UI to sort ongoing vs completed

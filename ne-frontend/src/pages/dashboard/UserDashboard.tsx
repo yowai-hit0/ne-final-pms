@@ -9,7 +9,7 @@ import Alert from '../../components/ui/Alert';
 import { useAuth } from '../../context/AuthContext';
 import { SpotsService } from '../../services/spots.service';
 import { BookingsService } from '../../services/bookings.service';
-import { ParkingSpot, SpotFilters } from '../../types';
+import { ParkingSpot, SpotFilters, ApiResponse, ParkingSpotsResponse } from '../../types';
 import { useNavigate } from 'react-router-dom';
 
 const UserDashboard: React.FC = () => {
@@ -20,10 +20,9 @@ const UserDashboard: React.FC = () => {
   const [spots, setSpots] = useState<ParkingSpot[]>([]);
   const [isLoadingSpots, setIsLoadingSpots] = useState(true);
   const [spotsError, setSpotsError] = useState<string | null>(null);
-  const [bookingSuccess, setBookingSuccess] = useState<string | null>(null);
-  
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [bookingSuccess, setBookingSuccess] = useState<string | null>(null);
   
   const fetchAvailableSpots = async (page = 1) => {
     setIsLoadingSpots(true);
@@ -32,18 +31,39 @@ const UserDashboard: React.FC = () => {
     try {
       const filters: SpotFilters = {
         page,
-        limit: 6, // Show 6 spots per page
+        limit: 6,
       };
       
       const response = await SpotsService.getAvailableSpots(filters);
-      setSpots(response.data);
-      setCurrentPage(response.meta.currentPage);
-      setTotalPages(response.meta.totalPages);
+      
+      // Type guard to ensure response has the correct structure
+      if (isValidParkingSpotsResponse(response)) {
+        setSpots(response.data.spots);
+        setCurrentPage(response.data.meta.page);
+        setTotalPages(response.data.meta.lastPage);
+      } else {
+        throw new Error('Invalid response format from server');
+      }
     } catch (error: any) {
       setSpotsError(error.response?.data?.message || 'Failed to load available parking spots');
     } finally {
       setIsLoadingSpots(false);
     }
+  };
+  
+  // Type guard function
+  const isValidParkingSpotsResponse = (
+    response: any
+  ): response is ApiResponse<ParkingSpotsResponse> => {
+    return (
+      response &&
+      response.status === 'success' &&
+      response.data &&
+      Array.isArray(response.data.spots) &&
+      response.data.meta &&
+      typeof response.data.meta.page === 'number' &&
+      typeof response.data.meta.lastPage === 'number'
+    );
   };
   
   useEffect(() => {

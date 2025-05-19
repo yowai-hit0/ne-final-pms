@@ -45,10 +45,10 @@ const AdminDashboard: React.FC = () => {
       };
       
       const response = await SpotsService.getAllSpots(filters);
-      setSpots(response.data);
-      setCurrentPage(response.meta.currentPage);
-      setTotalPages(response.meta.totalPages);
-      setTotalSpots(response.meta.totalItems);
+      setSpots(response.data.spots);
+      setCurrentPage(response.data.meta.page);
+      setTotalPages(response.data.meta.lastPage);
+      setTotalSpots(response.data.meta.total);
     } catch (error: any) {
       setSpotsError(error.response?.data?.message || 'Failed to load parking spots');
     } finally {

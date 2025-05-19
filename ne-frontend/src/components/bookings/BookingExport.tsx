@@ -3,26 +3,26 @@ import { Download } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { Button } from '../ui/Button';
 
-type Booking = {
-  id: string;
-  customerName: string;
-  status: string;
-  serviceType: string;
-  startDate: string;
-  endDate: string;
-  paymentStatus: string;
-  createdAt: string;
-  updatedAt: string;
-};
+// type Booking = {
+//   id: string;
+//   customerName: string;
+//   status: string;
+//   serviceType: string;
+//   startDate: string;
+//   endDate: string;
+//   paymentStatus: string;
+//   createdAt: string;
+//   updatedAt: string;
+// };
 
 type BookingExportProps = {
-  bookings: Booking[];
+  bookings: any;
   isFiltered: boolean;
 };
 
 export const BookingExport: React.FC<BookingExportProps> = ({ bookings, isFiltered }) => {
   const exportToCSV = () => {
-    const csvContent = bookings.map((booking) => ({
+    const csvContent = bookings.map((booking:any) => ({
       'Booking ID': booking.id,
       'Customer Name': booking.customerName,
       'Status': booking.status,
