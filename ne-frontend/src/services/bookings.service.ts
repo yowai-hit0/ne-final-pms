@@ -11,17 +11,17 @@ export const BookingsService = {
     }
     
     const response = await api.get(url);
-    return response.data;
+    return response.data.data;
   },
   
   async createBooking(spotId: string): Promise<Booking> {
     const response = await api.post('/bookings', { spotId });
-    return response.data;
+    return response.data.data;
   },
   
   async releaseBooking(bookingId: string): Promise<{ message: string }> {
     const response = await api.put('/bookings/release', { bookingId });
-    return response.data;
+    return response.data.data;
   },
 };
 
