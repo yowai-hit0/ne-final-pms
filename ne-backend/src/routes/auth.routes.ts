@@ -15,6 +15,7 @@ import {
   RegisterDTO,
   LoginDTO,
   EmailDTO,
+  VerifyOtpDTO,
   ResetPasswordDTO,
 } from "../dtos/auth.dto";
 import { verifyAuth } from "../middlewares/auth.middleware";
@@ -34,7 +35,7 @@ router.post(
 
 // Password-reset flows
 router.post("/request-otp", validateRequest(EmailDTO), requestOtp);
-router.post("/verify-otp", validateRequest(EmailDTO), verifyOtp);
+router.post("/verify-otp", validateRequest(VerifyOtpDTO), verifyOtp);
 router.post("/forgot-password", validateRequest(EmailDTO), forgotPassword);
 router.post(
   "/reset-password",

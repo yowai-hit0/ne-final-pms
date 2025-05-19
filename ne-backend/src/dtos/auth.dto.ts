@@ -74,3 +74,13 @@ export class ResetPasswordDTO {
   @IsNotEmpty()
   email!: string;
 }
+
+export class VerifyOtpDTO{
+  @IsString()
+  @IsNotEmpty()
+  code!: string;
+
+  @IsEmail()
+  @IsNotEmpty()
+  email!: string;
+}
