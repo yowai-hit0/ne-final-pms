@@ -27,6 +27,7 @@ export class CreateParkingDTO {
   @MaxLength(200)
   address!: string;
 
+  @IsNotEmpty()
   numberOfAvailableSpace!: number;
 
   @IsNumber()
