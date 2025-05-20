@@ -75,9 +75,9 @@ export const getProfile = async (): Promise<User> => {
       url: '/auth/profile',
     });
     
-    if (response.data?.user) {
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-      return response.data.user;
+    if (response.data) {
+      localStorage.setItem('user', JSON.stringify(response.data));
+      return response.data;
     }
     
     throw new Error('Failed to get user profile');
