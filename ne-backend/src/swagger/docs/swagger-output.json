@@ -123,123 +123,6 @@
         ]
       }
     },
-    "/auth/request-otp": {
-      "post": {
-        "tags": [
-          "Auth"
-        ],
-        "description": "Authentication endpoints (register, login, OTP, etc.)",
-        "responses": {
-          "default": {
-            "description": ""
-          }
-        },
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "email": {
-                    "example": "any"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/auth/activate": {
-      "post": {
-        "tags": [
-          "Auth"
-        ],
-        "description": "Authentication endpoints (register, login, OTP, etc.)",
-        "responses": {
-          "default": {
-            "description": ""
-          }
-        },
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "email": {
-                    "example": "any"
-                  },
-                  "code": {
-                    "example": "any"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/auth/forgot-password": {
-      "post": {
-        "tags": [
-          "Auth"
-        ],
-        "description": "Authentication endpoints (register, login, OTP, etc.)",
-        "responses": {
-          "default": {
-            "description": ""
-          }
-        },
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "email": {
-                    "example": "any"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/auth/reset-password": {
-      "post": {
-        "tags": [
-          "Auth"
-        ],
-        "description": "Authentication endpoints (register, login, OTP, etc.)",
-        "responses": {
-          "default": {
-            "description": ""
-          }
-        },
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "email": {
-                    "example": "any"
-                  },
-                  "code": {
-                    "example": "any"
-                  },
-                  "newPassword": {
-                    "example": "any"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/auth/profile": {
       "get": {
         "tags": [
@@ -262,12 +145,53 @@
         }
       }
     },
-    "/spots/": {
+    "/parkings/available": {
       "get": {
         "tags": [
-          "Parking Spots"
+          "parking"
         ],
-        "description": "Manage parking slots: list, create, generate, delete",
+        "description": "Create, list, and release parking bookings",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/parkings/": {
+      "get": {
+        "tags": [
+          "parking"
+        ],
+        "description": "Create, list, and release parking bookings",
         "parameters": [
           {
             "name": "authorization",
@@ -304,9 +228,9 @@
       },
       "post": {
         "tags": [
-          "Parking Spots"
+          "parking"
         ],
-        "description": "Manage parking slots: list, create, generate, delete",
+        "description": "Create, list, and release parking bookings",
         "parameters": [
           {
             "name": "authorization",
@@ -325,30 +249,24 @@
           {
             "bearerAuth": []
           }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "spotNumber": {
-                    "example": "any"
-                  }
-                }
-              }
-            }
-          }
-        }
+        ]
       }
     },
-    "/spots/generate": {
-      "post": {
+    "/parkings/{id}": {
+      "put": {
         "tags": [
-          "Parking Spots"
+          "parking"
         ],
-        "description": "Manage parking slots: list, create, generate, delete",
+        "description": "Create, list, and release parking bookings",
         "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "name": "authorization",
             "in": "header",
@@ -366,32 +284,13 @@
           {
             "bearerAuth": []
           }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "prefix": {
-                    "example": "any"
-                  },
-                  "count": {
-                    "example": "any"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/spots/{id}": {
+        ]
+      },
       "delete": {
         "tags": [
-          "Parking Spots"
+          "parking"
         ],
-        "description": "Manage parking slots: list, create, generate, delete",
+        "description": "Create, list, and release parking bookings",
         "parameters": [
           {
             "name": "id",
@@ -421,53 +320,12 @@
         ]
       }
     },
-    "/spots/available": {
-      "get": {
-        "tags": [
-          "Parking Spots"
-        ],
-        "description": "Manage parking slots: list, create, generate, delete",
-        "parameters": [
-          {
-            "name": "authorization",
-            "in": "header",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "default": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/bookings/": {
+    "/tickets/": {
       "post": {
         "tags": [
-          "Bookings"
+          "ticket"
         ],
-        "description": "Create, list, and release parking bookings",
+        "description": "ticket management (view profile, update, etc.)",
         "parameters": [
           {
             "name": "authorization",
@@ -493,7 +351,7 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "spotId": {
+                  "parkingId": {
                     "example": "any"
                   }
                 }
@@ -504,9 +362,9 @@
       },
       "get": {
         "tags": [
-          "Bookings"
+          "ticket"
         ],
-        "description": "Create, list, and release parking bookings",
+        "description": "ticket management (view profile, update, etc.)",
         "parameters": [
           {
             "name": "authorization",
@@ -528,13 +386,6 @@
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "name": "status",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
           }
         ],
         "responses": {
@@ -549,12 +400,12 @@
         ]
       }
     },
-    "/bookings/release": {
+    "/tickets/checkout": {
       "put": {
         "tags": [
-          "Bookings"
+          "ticket"
         ],
-        "description": "Create, list, and release parking bookings",
+        "description": "ticket management (view profile, update, etc.)",
         "parameters": [
           {
             "name": "authorization",
@@ -580,7 +431,7 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "bookingId": {
+                  "ticketId": {
                     "example": "any"
                   }
                 }
@@ -588,6 +439,157 @@
             }
           }
         }
+      }
+    },
+    "/tickets/me": {
+      "get": {
+        "tags": [
+          "ticket"
+        ],
+        "description": "ticket management (view profile, update, etc.)",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/tickets/report/entries": {
+      "get": {
+        "tags": [
+          "ticket"
+        ],
+        "description": "ticket management (view profile, update, etc.)",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/tickets/report/exits": {
+      "get": {
+        "tags": [
+          "ticket"
+        ],
+        "description": "ticket management (view profile, update, etc.)",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     }
   },

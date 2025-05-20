@@ -1,7 +1,7 @@
 // seedAdmin.ts
 import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
-import { Role, UserStatus } from '@prisma/client';
+import { Role } from '@prisma/client';
 import prisma from './prisma/prisma-client'; // adjust path if needed
 
 dotenv.config();
@@ -32,7 +32,6 @@ async function seedAdmin() {
         email: adminEmail,
         password: hashed,
         role: Role.ADMIN,
-        status: UserStatus.ENABLED,
         // no vehiclePlateNumber for admin
       }
     });

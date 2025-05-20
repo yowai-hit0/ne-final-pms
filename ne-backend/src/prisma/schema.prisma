@@ -7,72 +7,58 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+/// Two roles only: ADMIN & USER
 enum Role {
-  ADMIN  
-  USER 
-
-  @@map("roles")
-}
-enum UserStatus {
-  DISABLED
-  ENABLED
-
-  @@map("user_status")
+  ADMIN
+  USER
 }
 
-
+/// Users of the system: admins or drivers
 model User {
-  id                    String     @id @default(uuid())
-  firstName             String     @map("first_name")
-  lastName              String     @map("last_name")
-  email                 String     @unique
-  password              String
-  role                  Role       @default(USER)
-  status                UserStatus @default(DISABLED)
-  vehiclePlateNumber    String?    @map("vehicle_plate_number")
-  createdAt             DateTime   @default(now()) @map("created_at")
-  updatedAt             DateTime   @updatedAt @map("updated_at")
-  bookings              Booking[]
+  id                  String   @id @default(uuid())
+  firstName           String   @map("first_name")
+  lastName            String   @map("last_name")
+  email               String   @unique
+  password            String
+  role                Role     @default(USER)
+  vehiclePlateNumber  String?  @map("vehicle_plate_number")
+  tickets             Ticket[]
+
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt       @map("updated_at")
 
   @@map("users")
 }
 
-model ParkingSpot {
-  id           String    @id @default(uuid())
-  spotNumber   String    @unique @map("spot_number")
-  isOccupied   Boolean   @default(false) @map("is_occupied")
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
-  bookings     Booking[]
+/// Parking lots
+model Parking {
+  id                     String   @id @default(uuid())
+  code                   String   @unique
+  name                   String
+  address                String
+  numberOfAvailableSpace Int      @map("number_of_available_space")
+  chargingFeePerHour     Float    @map("charging_fee_per_hour")
+  tickets                Ticket[]
 
-  @@map("parking_spots")
+  createdAt              DateTime @default(now()) @map("created_at")
+  updatedAt              DateTime @updatedAt       @map("updated_at")
+
+  @@map("parkings")
 }
 
-model Booking {
-  id          String    @id @default(uuid())
-  userId      String    @map("user_id")
-  spotId      String    @map("spot_id")
-  bookedAt    DateTime  @default(now()) @map("booked_at")
-  releasedAt  DateTime? @map("released_at")
+/// Tickets for check-in / check-out
+model Ticket {
+  id            String   @id @default(uuid())
+  user          User     @relation(fields: [userId], references: [id])
+  userId        String   @map("user_id")
+  parking       Parking  @relation(fields: [parkingId], references: [id])
+  parkingId     String   @map("parking_id")
+  entryTime     DateTime @default(now()) @map("entry_time")
+  exitTime      DateTime? @map("exit_time")
+  chargedAmount Float    @default(0) @map("charged_amount")
 
-  user User @relation(fields: [userId], references: [id])
-  spot ParkingSpot @relation(fields: [spotId], references: [id])
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt       @map("updated_at")
 
-  @@map("bookings")
-}
-
-model OTP {
-  id         String   @id @default(uuid())
-  email      String
-  code       String
-  createdAt  DateTime @default(now()) @map("created_at")
-  expiresAt  DateTime @map("expires_at")  
-  type       OtpType  @default(ACTIVATION)
-  @@map("otps")
-}
-
-enum OtpType {
-  ACTIVATION
-  RESET
-  @@map("otp_types")
+  @@map("tickets")
 }

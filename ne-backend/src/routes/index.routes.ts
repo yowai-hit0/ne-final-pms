@@ -1,8 +1,8 @@
 // src/routes/index.routes.ts
 import { Router } from "express";
 import authRouter from "./auth.routes";
-import spotRouter from "./spot.routes";
-import bookingRouter from "./booking.routes";
+import parkingRouter from "./parking.routes";
+import ticketRouter from './tickets.routes'
 // import userRouter from "./user.routes";
 
 const router = Router();
@@ -17,37 +17,28 @@ router.use(
   */
 );
 
-// ─── Parking Spots ─────────────────────────────────────────────────────────────
-router.use(
-  "/spots",
-  spotRouter
-  /*
-    #swagger.tags = ['Parking Spots']
-    #swagger.description = 'Manage parking slots: list, create, generate, delete'
-    #swagger.security = [{ "bearerAuth": [] }]
-  */
-);
 
 // ─── Bookings ──────────────────────────────────────────────────────────────────
 router.use(
-  "/bookings",
-  bookingRouter
+  "/parkings",
+  parkingRouter
   /*
-    #swagger.tags = ['Bookings']
+    #swagger.tags = ['parking']
     #swagger.description = 'Create, list, and release parking bookings'
     #swagger.security = [{ "bearerAuth": [] }]
   */
 );
 
-// ─── Users ─────────────────────────────────────────────────────────────────────
-// router.use(
-//   "/user",
-//   userRouter
-//   /*
-//     #swagger.tags = ['Users']
-//     #swagger.description = 'User management (view profile, update, etc.)'
-//     #swagger.security = [{ "bearerAuth": [] }]
-//   */
-// );
+
+// ─── tickets ─────────────────────────────────────────────────────────────────────
+router.use(
+  "/tickets",
+  ticketRouter
+  /*
+    #swagger.tags = ['ticket']
+    #swagger.description = 'ticket management (view profile, update, etc.)'
+    #swagger.security = [{ "bearerAuth": [] }]
+  */
+);
 
 export default router;

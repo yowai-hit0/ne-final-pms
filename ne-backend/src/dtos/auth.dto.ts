@@ -60,27 +60,27 @@ export class EmailDTO {
   email!: string;
 }
 
-export class ResetPasswordDTO {
-  @IsString()
-  @IsNotEmpty()
-  token!: string;
+// export class ResetPasswordDTO {
+//   @IsString()
+//   @IsNotEmpty()
+//   token!: string;
 
-  @IsString()
-  @MinLength(6)
-  @IsNotEmpty()
-  newPassword!: string;
+//   @IsString()
+//   @MinLength(6)
+//   @IsNotEmpty()
+//   newPassword!: string;
 
-  @IsEmail()
-  @IsNotEmpty()
-  email!: string;
-}
+//   @IsEmail()
+//   @IsNotEmpty()
+//   email!: string;
+// }
 
-export class VerifyOtpDTO{
-  @IsString()
-  @IsNotEmpty()
-  code!: string;
+// export class VerifyOtpDTO{
+//   @IsString()
+//   @IsNotEmpty()
+//   code!: string;
 
-  @IsEmail()
-  @IsNotEmpty()
-  email!: string;
-}
+//   @IsEmail()
+//   @IsNotEmpty()
+//   email!: string;
+// }

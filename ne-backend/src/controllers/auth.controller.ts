@@ -1,104 +1,82 @@
 import { config } from "dotenv";
-import { Request, Response , RequestHandler} from "express";
+import { Request, Response, RequestHandler } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import prisma from "../prisma/prisma-client";
 import ServerResponse from "../utils/ServerResponse";
-import { sendOtpEmail } from "../utils/otp";
 import { AuthRequest } from "../types";
+import cookieParser from "cookie-parser";
+
 config();
 const {
   ACCESS_TOKEN_SECRET,
   ACCESS_TOKEN_EXPIRY = "15m",
   REFRESH_TOKEN_SECRET,
   REFRESH_TOKEN_EXPIRY = "7d",
-  OTP_EXPIRY_MINUTES = "15",
 } = process.env;
 
 if (!ACCESS_TOKEN_SECRET || !REFRESH_TOKEN_SECRET) {
-  throw new Error("Missing ACCESS_TOKEN_SECRET or REFRESH_TOKEN_SECRET in .env");
+  throw new Error(
+    "Missing ACCESS_TOKEN_SECRET or REFRESH_TOKEN_SECRET in .env"
+  );
 }
 
 // ─── Register ──────────────────────────────────────────────────────────────────
-export const register = async (req: Request, res: Response): Promise<void> => {
+export const register: RequestHandler = async (req, res) => {
   try {
-    const { email, password, firstName, lastName, vehiclePlateNumber } = req.body;
+    const { email, password, firstName, lastName, vehiclePlateNumber } =
+      req.body;
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
       return ServerResponse.error(res, "Email already in use", null, 409);
     }
 
     const hashed = await bcrypt.hash(password, 10);
-    await prisma.user.create({
+    const user = await prisma.user.create({
       data: {
         email,
         password: hashed,
         firstName,
         lastName,
-        status: "DISABLED",
-        // include plate if provided
         vehiclePlateNumber: vehiclePlateNumber || null,
+        // role defaults to USER
       },
     });
 
-    // create activation OTP
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + Number(OTP_EXPIRY_MINUTES) * 60_000);
-    await prisma.oTP.create({
-      data: { email, code, expiresAt, type: "ACTIVATION" },
+    return ServerResponse.created(res, "Registered successfully", {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role,
+      vehiclePlateNumber: user.vehiclePlateNumber,
     });
-    await sendOtpEmail(email, code, "activation");
-
-    return ServerResponse.success(res, "Registered. Check email for activation code.");
   } catch (err: any) {
     return ServerResponse.error(res, "Error occurred", { error: err });
   }
 };
 
-
-export const activate = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { email, code } = req.body;
-    const otp = await prisma.oTP.findFirst({
-      where: { email, code, type: "ACTIVATION" },
-      orderBy: { createdAt: "desc" },
-    });
-    if (!otp || otp.expiresAt < new Date()) {
-      return ServerResponse.error(res, "Invalid or expired activation code", null, 400);
-    }
-
-    await prisma.user.update({ where: { email }, data: { status: "ENABLED" } });
-    await prisma.oTP.deleteMany({ where: { email, type: "ACTIVATION" } });
-
-    return ServerResponse.success(res, "Account activated. You can now log in.");
-  } catch (err: any) {
-    return ServerResponse.error(res, "Error occurred", { error: err });
-  }
-};
-
-export const login = async (req: Request, res: Response): Promise<void> => {
+// ─── Login ─────────────────────────────────────────────────────────────────────
+export const login: RequestHandler = async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) {
+    if (!user || !(await bcrypt.compare(password, user.password))) {
       return ServerResponse.error(res, "Invalid credentials", null, 401);
     }
-    if (!(await bcrypt.compare(password, user.password))) {
-      return ServerResponse.error(res, "Invalid credentials", null, 401);
-    }
+
     const accessToken = jwt.sign(
       { id: user.id, role: user.role },
-      ACCESS_TOKEN_SECRET !,
+      ACCESS_TOKEN_SECRET!,
       { expiresIn: ACCESS_TOKEN_EXPIRY } as any
     );
-
     const refreshToken = jwt.sign(
       { id: user.id, role: user.role },
-      REFRESH_TOKEN_SECRET! ,
+      REFRESH_TOKEN_SECRET!,
       { expiresIn: REFRESH_TOKEN_EXPIRY } as any
     );
 
-    // set HttpOnly cookie for refresh
+    // Set HttpOnly cookie for refresh token
     res.cookie("jid", refreshToken, {
       httpOnly: true,
       path: "/api/auth/refresh-token",
@@ -106,48 +84,54 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       sameSite: "strict",
       maxAge: ms(REFRESH_TOKEN_EXPIRY),
     });
-    const response_user = {
-  id: user.id,
-  email: user.email,
-  firstName: user.email,
-  lastName: user.lastName,
-  role: user.role,
-  vehiclePlateNumber: user.vehiclePlateNumber || null
-    }
-    return ServerResponse.success(res, "Login successful", { accessToken , user: response_user}); 
+
+    return ServerResponse.success(res, "Login successful", {
+      accessToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        vehiclePlateNumber: user.vehiclePlateNumber,
+      },
+    });
   } catch (err: any) {
     return ServerResponse.error(res, "Error occurred", { error: err });
   }
 };
 
-export const refreshToken = async (req: Request, res: Response): Promise<void> => {
+// ─── Refresh Token ──────────────────────────────────────────────────────────────
+export const refreshToken: RequestHandler = async (req, res) => {
   try {
     const token = req.cookies.jid;
     if (!token) {
       return ServerResponse.error(res, "No refresh token", null, 401);
     }
+
     let payload: any;
     try {
       payload = jwt.verify(token, REFRESH_TOKEN_SECRET!);
     } catch {
       return ServerResponse.error(res, "Invalid refresh token", null, 401);
     }
+
     const user = await prisma.user.findUnique({ where: { id: payload.id } });
-    if (!user || user.status !== "ENABLED") {
-      return ServerResponse.error(res, "User not found or not activated", null, 401);
+    if (!user) {
+      return ServerResponse.error(res, "User not found", null, 401);
     }
+
     const newAccess = jwt.sign(
       { id: user.id, role: user.role },
-      ACCESS_TOKEN_SECRET !,
+      ACCESS_TOKEN_SECRET!,
       { expiresIn: ACCESS_TOKEN_EXPIRY } as any
     );
-
     const newRefresh = jwt.sign(
       { id: user.id, role: user.role },
-      REFRESH_TOKEN_SECRET! ,
+      REFRESH_TOKEN_SECRET!,
       { expiresIn: REFRESH_TOKEN_EXPIRY } as any
     );
-    
+
     res.cookie("jid", newRefresh, {
       httpOnly: true,
       path: "/api/auth/refresh-token",
@@ -156,102 +140,40 @@ export const refreshToken = async (req: Request, res: Response): Promise<void> =
       maxAge: ms(REFRESH_TOKEN_EXPIRY),
     });
 
-    return ServerResponse.success(res, "Token refreshed", { accessToken: newAccess });
+    return ServerResponse.success(res, "Token refreshed", {
+      accessToken: newAccess,
+    });
   } catch (err: any) {
     return ServerResponse.error(res, "Error occurred", { error: err });
   }
 };
 
-
+// ─── Get Profile ────────────────────────────────────────────────────────────────
 export const getProfile: RequestHandler = async (req, res) => {
-  const auth = req as AuthRequest;
-  const userId = auth.user.id;
-
-  const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) {
-      return ServerResponse.error(res, "Invalid credentials", null, 401);
-    }
-  const response_user = {
+  const authReq = req as AuthRequest;
+  const user = await prisma.user.findUnique({
+    where: { id: authReq.user.id },
+  });
+  if (!user) {
+    return ServerResponse.error(res, "User not found", null, 404);
+  }
+  return ServerResponse.success(res, "Profile fetched", {
     id: user.id,
     email: user.email,
-    firstName: user.email,
+    firstName: user.firstName,
     lastName: user.lastName,
     role: user.role,
-    vehiclePlateNumber: user.vehiclePlateNumber || null
-    }
-
-  return ServerResponse.created(res, 'profile retrived', {user: response_user});
+    vehiclePlateNumber: user.vehiclePlateNumber,
+  });
 };
 
-export const logout = async (_req: Request, res: Response): Promise<void> => {
+// ─── Logout ────────────────────────────────────────────────────────────────────
+export const logout: RequestHandler = (_req, res) => {
   res.clearCookie("jid", { path: "/api/auth/refresh-token" });
   return ServerResponse.success(res, "Logged out successfully");
 };
 
-// Reuse for password-reset flows:
-export const requestOtp = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { email } = req.body;
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + Number(OTP_EXPIRY_MINUTES) * 60_000);
-    await prisma.oTP.create({ data: { email, code, expiresAt, type: "ACTIVATION" } });
-    await sendOtpEmail(email, code, "reset");
-    return ServerResponse.success(res, "Reset OTP sent");
-  } catch (err: any) {
-    return ServerResponse.error(res, "Error occurred", { error: err });
-  }
-};
-
-export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { email, code } = req.body;
-    const otp = await prisma.oTP.findFirst({
-      where: { email, code, type: "RESET" },
-      orderBy: { createdAt: "desc" },
-    });
-    if (!otp || otp.expiresAt < new Date()) {
-      return ServerResponse.error(res, "Invalid or expired OTP", null, 400);
-    }
-    return ServerResponse.success(res, "OTP verified", { verified: true });
-  } catch (err: any) {
-    return ServerResponse.error(res, "Error occurred", { error: err });
-  }
-};
-
-export const forgotPassword = async (req: Request, res: Response): Promise<void> => {
-
-  try {
-    const { email } = req.body;
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + Number(OTP_EXPIRY_MINUTES) * 60_000);
-    await prisma.oTP.create({ data: { email, code, expiresAt, type: "RESET" } });
-    await sendOtpEmail(email, code, "reset");
-    return ServerResponse.success(res, "Reset OTP sent");
-  } catch (err: any) {
-    return ServerResponse.error(res, "Error occurred", { error: err });
-  }
-};
-
-export const resetPassword = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { email, code, newPassword } = req.body;
-    const otp = await prisma.oTP.findFirst({
-      where: { email, code, type: "RESET" },
-      orderBy: { createdAt: "desc" },
-    });
-    if (!otp || otp.expiresAt < new Date()) {
-      return ServerResponse.error(res, "Invalid or expired OTP", null, 400);
-    }
-    const hashed = await bcrypt.hash(newPassword, 10);
-    await prisma.user.update({ where: { email }, data: { password: hashed } });
-    await prisma.oTP.deleteMany({ where: { email, type: "RESET" } });
-    return ServerResponse.success(res, "Password reset successful");
-  } catch (err: any) {
-    return ServerResponse.error(res, "Error occurred", { error: err });
-  }
-};
-
-/** Utility to convert expiry like "7d"|"15m" to ms */
+// ─── Utility ───────────────────────────────────────────────────────────────────
 function ms(str: string) {
   const num = parseInt(str, 10);
   if (str.endsWith("d")) return num * 24 * 60 * 60 * 1000;
